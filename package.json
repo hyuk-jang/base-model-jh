@@ -1,0 +1,23 @@
+{
+  "name": "base-model-jh",
+  "version": "1.0.0",
+  "description": "npm publish test",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyuk-jang/base-model-jh"
+  },
+  "keywords": [
+    "npm",
+    "base-model"
+  ],
+  "author": "j.hyuk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hyuk-jang/base-model-jh/issues"
+  },
+  "homepage": "https://github.com/hyuk-jang/base-model-jh#readme"
+}
