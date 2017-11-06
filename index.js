@@ -1,8 +1,10 @@
 
-const BM = require('./baseModel');
-
-module.exports = BM;
-
+const BM = require('./BaseModel');
+const db = require('./db');
+module.exports = {
+  BM,
+  db
+};
 
 // const BM = require('./baseModel');
 

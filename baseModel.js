@@ -3,6 +3,7 @@ const db = require('./db');
 
 class BaseModel {
   constructor(dbInfo = {host, user, password, database, connectionLimit}) {
+    this.db = db;
     
     db.createPool(dbInfo);
   }

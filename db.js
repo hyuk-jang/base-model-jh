@@ -9,7 +9,7 @@ Promise.promisifyAll(require('mysql/lib/Connection').prototype);
 Promise.promisifyAll(require('mysql/lib/Pool').prototype);
 
 let config = {
-  connectionLimit:10,
+  connectionLimit: 10,
   host: '',
   user: '',
   password: '',
@@ -38,12 +38,14 @@ function getTransaction() {
 }
 
 module.exports = {
-  createPool: (dbInfo = {host, user, password, database, connectionLimit}) => {
+  createPool: (dbInfo = { host, user, password, database, connectionLimit }) => {
     pool = mysql.createPool(dbInfo);
   },
   // 간편 쿼리
-  single(sql, values){
-    // console.log(sql, values)
+  single(sql, values, hasViewSql) {
+    if (hasViewSql) {
+      console.trace(sql, values)
+    }
     return using(getConnection(), connection => {
       return connection.queryAsync({
         sql: sql,
