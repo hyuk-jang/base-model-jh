@@ -44,7 +44,7 @@ module.exports = {
   // 간편 쿼리
   single(sql, values, hasViewSql) {
     if (hasViewSql) {
-      console.trace(sql, values)
+      console.trace(sql)
     }
     return using(getConnection(), connection => {
       return connection.queryAsync({

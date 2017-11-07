@@ -22,32 +22,32 @@ class BaseModel {
    * @param {String} fieldName Table Field 명
    * @param {String} attribute fieldName 에 매칭되는 Attribute
    */
-  getTable(tbName, fieldName, attribute) {
+  getTable(tbName, fieldName, attribute, hasViewSql) {
     let sql = `SELECT * FROM ${tbName}`;
     if (fieldName !== '' && fieldName !== undefined) {
       sql += ` WHERE ${fieldName} = '${attribute}';`;
     }
-    return db.single(sql);
+    return db.single(sql, null, hasViewSql);
   }
   /**
    * INSERT 일반 테이블
    * @param {String} tbName Table 명
    * @param {Object} insertObj Insert 할려고하는 Data Object
    */
-  setTable(tbName, insertObj) {
+  setTable(tbName, insertObj, hasViewSql) {
     let sql = `INSERT INTO ${tbName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
 
     console.log('sql', sql)
-    return db.single(sql);
+    return db.single(sql, null, hasViewSql);
   }
   /**
    * Multi INSERT 일반 테이블
    * @param {String} tbName Table 명
    * @param {Array} insertArrayObj Insert 할려고하는 Data Object List
    */
-  setTables(tbName, insertArrayObj) {
+  setTables(tbName, insertArrayObj, hasViewSql) {
     let sql = `INSERT INTO ${tbName} (${Object.keys(insertArrayObj[0])}) VALUES ${this.makeMultiInsertValues(insertArrayObj)}`;
-    return db.single(sql);
+    return db.single(sql, null, hasViewSql);
   }
 
   /**
@@ -59,9 +59,9 @@ class BaseModel {
   updateTable(tbName, whereObj = {
     key,
     value
-  }, updateObj) {
-    let sql = `UPDATE ${tbName} SET ${this.makeUpdateValues(updateObj)} WHERE ${key} = ${value}`;
-    return db.single(sql);
+  }, updateObj, hasViewSql) {
+    let sql = `UPDATE ${tbName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereObj.key} = ${whereObj.value}`;
+    return db.single(sql, null, hasViewSql);
   }
 
   /**
@@ -96,6 +96,8 @@ class BaseModel {
         returnValue += null;
       } else if (value === undefined) {
         returnValue += '';
+      } else if(value instanceof Date){
+        returnValue += value.toISOString().substring(0,19).replace('T', ' ');
       } else if (typeof value === 'number') {
         returnValue += value;
       } else {
@@ -133,11 +135,13 @@ class BaseModel {
       throw TypeError('object가 아님');
     }
 
-    for (key in objValue) {
+    for (let key in objValue) {
       if (returnValue !== '') {
         returnValue += ', ';
       }
-      if (objValue[key] == null) {
+      if(objValue[key] instanceof Date){
+        returnValue += `${key} = "${objValue[key].toISOString().substring(0,19).replace('T', ' ')}"`;
+      } else if (objValue[key] == null) {
         returnValue += `${key} = null`;
       } else if (objValue[key] === undefined) {
         returnValue += `${key} = ''`;
@@ -147,7 +151,7 @@ class BaseModel {
         returnValue += `${key} = '${this.MRF(objValue[key])}'`;
       }
     }
-    return returnvalue;
+    return returnValue;
   }
 }
 
