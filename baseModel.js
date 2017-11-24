@@ -1,4 +1,5 @@
 const db = require('./db');
+const Promise = require('bluebird');
 
 class BaseModel {
   constructor(dbInfo = {host, user, password, database, connectionLimit}) {
@@ -17,13 +18,13 @@ class BaseModel {
 
   /**
    * SELECT 일반 테이블
-   * @param {String} tbName Table 명
+   * @param {String} tblName Table 명
    * @param {String} fieldName Table Field 명
    * @param {String} attribute fieldName 에 매칭되는 Attribute
    * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  getTable(tbName, fieldName, attribute, hasViewSql) {
-    let sql = `SELECT * FROM ${tbName}`;
+  getTable(tblName, fieldName, attribute, hasViewSql) {
+    let sql = `SELECT * FROM ${tblName}`;
     if (fieldName !== '' && fieldName !== undefined) {
       sql += ` WHERE ${fieldName} = '${attribute}';`;
     }
@@ -31,66 +32,85 @@ class BaseModel {
   }
   /**
    * INSERT 일반 테이블
-   * @param {String} tbName Table 명
+   * @param {String} tblName Table 명
    * @param {Object} insertObj Insert 할려고하는 Data Object
    * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  setTable(tbName, insertObj, hasViewSql) {
+  setTable(tblName, insertObj, hasViewSql) {
     if(!Object.keys(insertObj).length){
       return new Error('object not defined');
     }
-    let sql = `INSERT INTO ${tbName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
+    let sql = `INSERT INTO ${tblName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
 
     return db.single(sql, null, hasViewSql);
   }
   /**
    * Multi INSERT 일반 테이블
-   * @param {String} tbName Table 명
+   * @param {String} tblName Table 명
    * @param {Array} insertList Insert 할려고하는 Data Object List
    * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  setTables(tbName, insertList, hasViewSql) {
+  setTables(tblName, insertList, hasViewSql) {
     if(!insertList.length){
       return new Error('object not defined');
     }
-    let sql = `INSERT INTO ${tbName} (${Object.keys(insertList[0])}) VALUES ${this.makeMultiInsertValues(insertList)}`;
+    let sql = `INSERT INTO ${tblName} (${Object.keys(insertList[0])}) VALUES ${this.makeMultiInsertValues(insertList)}`;
     return db.single(sql, null, hasViewSql);
   }
 
   /**
    * UPDATE 일반 테이블 
-   * @param {String} tbName Table 명
+   * @param {String} tblName Table 명
    * @param {Object} whereObj Where 절
    * @param {Object} updateObj Update 할려고하는 Data Object
    * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  updateTable(tbName, whereObj = {
+  updateTable(tblName, whereObj = {
     key,
     value
   }, updateObj, hasViewSql) {
     if(!Object.keys(whereObj).length || !Object.keys(updateObj).length){
       return new Error('object not defined');
     }
-    let sql = `UPDATE ${tbName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereObj.key} = ${whereObj.value}`;
+    let sql = `UPDATE ${tblName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereObj.key} = ${whereObj.value}`;
     return db.single(sql, null, hasViewSql);
   }
 
-
-  /**
-   * Craete Connection 을 이용하여 Multiple Query 수행
+    /**
+   * createPool 을 이용하여 Multiple Query 수행
    * @param {String} tbName 
    * @param {String} whereKey 
    * @param {Array} updateList 
    * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  updateTables(tbName, whereKey, updateList, hasViewSql){
+  async updateTablesByPool(tblName, whereKey, updateList, hasViewSql){
+    if(!updateList.length && whereKey !== ''){
+      return new Error('updateList or whereKey not defined');
+    }
+
+    return await Promise.map(updateList, updateObj => {
+      return this.updateTable(tblName, {
+        key: whereKey,
+        value: updateObj[whereKey]
+      }, updateObj, hasViewSql);
+    })
+  }
+
+
+  /**
+   * createConnection 을 이용하여 Multiple Query 수행
+   * @param {String} tbName 
+   * @param {String} whereKey 
+   * @param {Array} updateList 
+   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   */
+  updateTablesByConnection(tblName, whereKey, updateList, hasViewSql){
     if(!updateList.length && whereKey !== ''){
       return new Error('updateList or whereKey not defined');
     }
     let sql = '';
     updateList.forEach(updateObj => {
-      sql += `UPDATE ${tbName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereKey} = ${updateObj[whereKey]};`;
-
+      sql += `UPDATE ${tblName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereKey} = ${updateObj[whereKey]};`;
     })
 
     return this.db.multipleQuery(sql, hasViewSql);
