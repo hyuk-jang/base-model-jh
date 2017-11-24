@@ -39,12 +39,13 @@ function getTransaction() {
 
 module.exports = {
   createPool: (dbInfo = { host, user, password, database, connectionLimit }) => {
+    config = dbInfo;
     pool = mysql.createPool(dbInfo);
   },
   // 간편 쿼리
   single(sql, values, hasViewSql) {
     if (hasViewSql) {
-      console.trace(sql)
+      console.dir(sql)
     }
     return using(getConnection(), connection => {
       return connection.queryAsync({
@@ -60,6 +61,21 @@ module.exports = {
   query(callback) {
     return using(getConnection(), connection => {
       return callback(connection);
+    });
+  },
+  multipleQuery(sql, hasViewSql){
+    if (hasViewSql) {
+      console.dir(sql)
+    }
+    config.multipleStatements = true;
+    var connection = mysql.createConnection(config);
+    // Promise.promisify(mysql.con)
+    return connection.queryAsync({
+      sql: sql,
+      // values: values
+      // nestTables: true,
+      // typeCast: false,
+      // timeout: 10000
     });
   },
   // 트랜잭션

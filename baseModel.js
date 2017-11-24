@@ -1,4 +1,3 @@
-'use strict';
 const db = require('./db');
 
 class BaseModel {
@@ -21,6 +20,7 @@ class BaseModel {
    * @param {String} tbName Table 명
    * @param {String} fieldName Table Field 명
    * @param {String} attribute fieldName 에 매칭되는 Attribute
+   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   getTable(tbName, fieldName, attribute, hasViewSql) {
     let sql = `SELECT * FROM ${tbName}`;
@@ -33,20 +33,27 @@ class BaseModel {
    * INSERT 일반 테이블
    * @param {String} tbName Table 명
    * @param {Object} insertObj Insert 할려고하는 Data Object
+   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   setTable(tbName, insertObj, hasViewSql) {
+    if(!Object.keys(insertObj).length){
+      return new Error('object not defined');
+    }
     let sql = `INSERT INTO ${tbName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
 
-    console.log('sql', sql)
     return db.single(sql, null, hasViewSql);
   }
   /**
    * Multi INSERT 일반 테이블
    * @param {String} tbName Table 명
-   * @param {Array} insertArrayObj Insert 할려고하는 Data Object List
+   * @param {Array} insertList Insert 할려고하는 Data Object List
+   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  setTables(tbName, insertArrayObj, hasViewSql) {
-    let sql = `INSERT INTO ${tbName} (${Object.keys(insertArrayObj[0])}) VALUES ${this.makeMultiInsertValues(insertArrayObj)}`;
+  setTables(tbName, insertList, hasViewSql) {
+    if(!insertList.length){
+      return new Error('object not defined');
+    }
+    let sql = `INSERT INTO ${tbName} (${Object.keys(insertList[0])}) VALUES ${this.makeMultiInsertValues(insertList)}`;
     return db.single(sql, null, hasViewSql);
   }
 
@@ -55,14 +62,40 @@ class BaseModel {
    * @param {String} tbName Table 명
    * @param {Object} whereObj Where 절
    * @param {Object} updateObj Update 할려고하는 Data Object
+   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   updateTable(tbName, whereObj = {
     key,
     value
   }, updateObj, hasViewSql) {
+    if(!Object.keys(whereObj).length || !Object.keys(updateObj).length){
+      return new Error('object not defined');
+    }
     let sql = `UPDATE ${tbName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereObj.key} = ${whereObj.value}`;
     return db.single(sql, null, hasViewSql);
   }
+
+
+  /**
+   * Craete Connection 을 이용하여 Multiple Query 수행
+   * @param {String} tbName 
+   * @param {String} whereKey 
+   * @param {Array} updateList 
+   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   */
+  updateTables(tbName, whereKey, updateList, hasViewSql){
+    if(!updateList.length && whereKey !== ''){
+      return new Error('updateList or whereKey not defined');
+    }
+    let sql = '';
+    updateList.forEach(updateObj => {
+      sql += `UPDATE ${tbName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereKey} = ${updateObj[whereKey]};`;
+
+    })
+
+    return this.db.multipleQuery(sql, hasViewSql);
+  }
+
 
   /**
    * Make Replace F
@@ -92,17 +125,7 @@ class BaseModel {
       if (index !== 0) {
         returnValue += ', ';
       }
-      if (value === null) {
-        returnValue += null;
-      } else if (value === undefined) {
-        returnValue += '';
-      } else if(value instanceof Date){
-        returnValue += value.toISOString().substring(0,19).replace('T', ' ');
-      } else if (typeof value === 'number') {
-        returnValue += value;
-      } else {
-        returnValue += `'${this.MRF(value)}'`;
-      }
+      returnValue += this.makeVaildValue(value);
     });
 
     returnValue += ')';
@@ -139,19 +162,27 @@ class BaseModel {
       if (returnValue !== '') {
         returnValue += ', ';
       }
-      if(objValue[key] instanceof Date){
-        returnValue += `${key} = "${objValue[key].toISOString().substring(0,19).replace('T', ' ')}"`;
-      } else if (objValue[key] == null) {
-        returnValue += `${key} = null`;
-      } else if (objValue[key] === undefined) {
-        returnValue += `${key} = ''`;
-      } else if (typeof objValue[key] === 'number') {
-        returnValue += `${key} = ${objValue[key]}`;
-      } else {
-        returnValue += `${key} = '${this.MRF(objValue[key])}'`;
-      }
+
+      returnValue += `${key} = ${this.makeVaildValue(objValue[key])}`;
     }
     return returnValue;
+  }
+
+  makeVaildValue(checkValue){
+    let returnValue = null;
+    if(checkValue instanceof Date){
+      returnValue = checkValue.toISOString().substring(0,19).replace('T', ' ');
+    } else if (checkValue == null) {
+      returnValue = null;
+    } else if (checkValue === undefined) {
+      returnValue = '';
+    } else if (typeof checkValue === 'number') {
+      returnValue = checkValue;
+    } else {
+      returnValue = this.MRF(checkValue);
+    }
+
+    return typeof returnValue === 'string' ? `"${returnValue}"` : returnValue;
   }
 }
 
