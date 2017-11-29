@@ -26,7 +26,11 @@ class BaseModel {
   getTable(tblName, fieldName, attribute, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
     if (fieldName !== '' && fieldName !== undefined) {
-      sql += ` WHERE ${fieldName} = '${attribute}';`;
+      if(Array.isArray(attribute)){
+        sql += ` WHERE ${fieldName} IN (${attribute});`;
+      } else {
+        sql += ` WHERE ${fieldName} = '${attribute}';`;
+      }
     }
     return db.single(sql, null, hasViewSql);
   }
