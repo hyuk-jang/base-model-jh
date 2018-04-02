@@ -15,8 +15,12 @@ class BaseModel {
    */
   constructor(dbInfo) {
     this.db = db;
-    
-    db.createPool(dbInfo);
+
+    try {
+      db.createPool(dbInfo);
+    } catch (error) {
+      throw error;      
+    }
   }
 
   /**

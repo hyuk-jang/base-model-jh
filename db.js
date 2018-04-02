@@ -38,7 +38,7 @@ function getTransaction() {
 }
 
 module.exports = {
-  createPool: (dbInfo = { host, user, password, database, connectionLimit }) => {
+  createPool: (dbInfo) => {
     config = dbInfo;
     pool = mysql.createPool(dbInfo);
   },
