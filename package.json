@@ -1,6 +1,6 @@
 {
   "name": "base-model-jh",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "npm publish test",
   "main": "index.js",
   "scripts": {
@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/hyuk-jang/base-model-jh/issues"
   },
-  "homepage": "https://github.com/hyuk-jang/base-model-jh#readme"
+  "homepage": "https://github.com/hyuk-jang/base-model-jh#readme",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "mysql": "^2.15.0"
+  }
 }

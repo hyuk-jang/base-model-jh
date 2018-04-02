@@ -1,8 +1,19 @@
+/**
+ * @typedef {Object} dbInfo
+ * @property {string} host 접속 경로
+ * @property {string} user 접속 ID
+ * @property {string} password 접속 PW
+ * @property {string} database 접속 DB
+ */
+
 const db = require('./db');
 const Promise = require('bluebird');
 
 class BaseModel {
-  constructor(dbInfo = {host, user, password, database, connectionLimit}) {
+  /**
+   * @param {dbInfo} dbInfo 
+   */
+  constructor(dbInfo) {
     this.db = db;
     
     db.createPool(dbInfo);
@@ -10,18 +21,18 @@ class BaseModel {
 
   /**
    * 
-   * @param {Object} dbInfo mysql Create Pool을 위함
+   * @param {dbInfo} dbInfo mysql Create Pool을 위함
    */
-  changePool(dbInfo = {host, user, password, database, connectionLimit}) {
+  changePool(dbInfo) {
     db.createPool(dbInfo);
   }
 
   /**
    * SELECT 일반 테이블
-   * @param {String} tblName Table 명
-   * @param {String} fieldName Table Field 명
-   * @param {String} attribute fieldName 에 매칭되는 Attribute
-   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   * @param {string} tblName Table 명
+   * @param {string} fieldName Table Field 명
+   * @param {string} attribute fieldName 에 매칭되는 Attribute
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   getTable(tblName, fieldName, attribute, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
@@ -36,9 +47,9 @@ class BaseModel {
   }
   /**
    * INSERT 일반 테이블
-   * @param {String} tblName Table 명
+   * @param {string} tblName Table 명
    * @param {Object} insertObj Insert 할려고하는 Data Object
-   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   setTable(tblName, insertObj, hasViewSql) {
     if(!Object.keys(insertObj).length){
@@ -50,9 +61,9 @@ class BaseModel {
   }
   /**
    * Multi INSERT 일반 테이블
-   * @param {String} tblName Table 명
-   * @param {Array} insertList Insert 할려고하는 Data Object List
-   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   * @param {string} tblName Table 명
+   * @param {Object[]} insertList Insert 할려고하는 Data Object List
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   setTables(tblName, insertList, hasViewSql) {
     if(!insertList.length){
@@ -64,15 +75,12 @@ class BaseModel {
 
   /**
    * UPDATE 일반 테이블 
-   * @param {String} tblName Table 명
-   * @param {Object} whereObj Where 절
+   * @param {string} tblName Table 명
+   * @param {{key: string,value: string|number}} whereObj Where 절
    * @param {Object} updateObj Update 할려고하는 Data Object
-   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  updateTable(tblName, whereObj = {
-    key,
-    value
-  }, updateObj, hasViewSql) {
+  updateTable(tblName, whereObj, updateObj, hasViewSql) {
     if(!Object.keys(whereObj).length || !Object.keys(updateObj).length){
       return new Error('object not defined');
     }
@@ -82,10 +90,10 @@ class BaseModel {
 
     /**
    * createPool 을 이용하여 Multiple Query 수행
-   * @param {String} tbName 
-   * @param {String} whereKey 
-   * @param {Array} updateList 
-   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   * @param {string} tbName 
+   * @param {string} whereKey 
+   * @param {Object[]} updateList 
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   async updateTablesByPool(tblName, whereKey, updateList, hasViewSql){
     if(!updateList.length && whereKey !== ''){
@@ -103,10 +111,10 @@ class BaseModel {
 
   /**
    * createConnection 을 이용하여 Multiple Query 수행
-   * @param {String} tbName 
-   * @param {String} whereKey 
-   * @param {Array} updateList 
-   * @param {Boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   * @param {string} tbName 
+   * @param {string} whereKey 
+   * @param {Object[]} updateList 
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   updateTablesByConnection(tblName, whereKey, updateList, hasViewSql){
     if(!updateList.length && whereKey !== ''){
@@ -123,7 +131,7 @@ class BaseModel {
 
   /**
    * Make Replace F
-   * @param {String} value SQL
+   * @param {string} value SQL
    */
   MRF(value) {
     var str_value = value.toString();
