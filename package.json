@@ -1,6 +1,6 @@
 {
   "name": "base-model-jh",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "npm publish test",
   "main": "index.js",
   "scripts": {

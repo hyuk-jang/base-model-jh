@@ -1,9 +1,11 @@
 
 const BM = require('./BaseModel');
 const db = require('./db');
+const TempStorage = require('./TempStorage');
 module.exports = {
   BM,
-  db
+  db,
+  TempStorage
 };
 
 // const BM = require('./baseModel');
