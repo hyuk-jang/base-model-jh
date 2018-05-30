@@ -1,5 +1,5 @@
 
-const BM = require('./BaseModel');
+const BM = require('./baseModel');
 const db = require('./db');
 const TempStorage = require('./TempStorage');
 module.exports = {
