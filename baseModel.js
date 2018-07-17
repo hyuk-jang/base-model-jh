@@ -31,24 +31,39 @@ class BaseModel {
     db.createPool(dbInfo);
   }
 
+
+  /**
+ * @typedef {Object} whereInfo
+ * @property {number=} main_seq Main ID
+ * @property {number=} data_logger_seq 데이터 로거 ID
+ */
+  
   /**
    * SELECT 일반 테이블
    * @param {string} tblName Table 명
-   * @param {string} fieldName Table Field 명
-   * @param {string} attribute fieldName 에 매칭되는 Attribute
+   * @param {Object=} whereInfo where 조건 {key: value, key: value, ...}
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  getTable(tblName, fieldName, attribute, hasViewSql) {
+  getTable(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
-    if (fieldName !== '' && fieldName !== undefined) {
-      if(Array.isArray(attribute)){
-        sql += ` WHERE ${fieldName} IN (${attribute});`;
-      } else {
-        sql += ` WHERE ${fieldName} = '${attribute}';`;
+    if(typeof whereInfo === 'object'){
+      sql += ' WHERE ';
+      let index = 0;
+      for (const key in whereInfo) {
+        if (whereInfo.hasOwnProperty(key)) {
+          const value = whereInfo[key];
+          if(index++){
+            sql += ' AND ';
+          }
+          sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        }
       }
     }
+
     return db.single(sql, null, hasViewSql);
   }
+
+
   /**
    * INSERT 일반 테이블
    * @param {string} tblName Table 명
@@ -92,7 +107,7 @@ class BaseModel {
     return db.single(sql, null, hasViewSql);
   }
 
-    /**
+  /**
    * createPool 을 이용하여 Multiple Query 수행
    * @param {string} tbName 
    * @param {string} whereKey 
@@ -109,7 +124,7 @@ class BaseModel {
         key: whereKey,
         value: updateObj[whereKey]
       }, updateObj, hasViewSql);
-    })
+    });
   }
 
 
@@ -127,7 +142,7 @@ class BaseModel {
     let sql = '';
     updateList.forEach(updateObj => {
       sql += `UPDATE ${tblName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereKey} = ${updateObj[whereKey]};`;
-    })
+    });
 
     return this.db.multipleQuery(sql, hasViewSql);
   }
@@ -139,7 +154,7 @@ class BaseModel {
    */
   MRF(value) {
     var str_value = value.toString();
-    return str_value.split("'").join("''");
+    return str_value.split('\'').join('\'\'');
   }
 
 
@@ -179,7 +194,7 @@ class BaseModel {
       if (index + 1 < arrObj.length) {
         returnValue += ', ';
       }
-    })
+    });
 
     return returnValue;
   }
