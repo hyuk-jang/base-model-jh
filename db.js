@@ -14,7 +14,7 @@ let config = {
   user: '',
   password: '',
   database: ''
-}
+};
 
 pool = mysql.createPool(config);
 
@@ -45,7 +45,7 @@ module.exports = {
   // 간편 쿼리
   single(sql, values, hasViewSql) {
     if (hasViewSql) {
-      console.log(sql)
+      console.log(sql);
     }
     return using(getConnection(), connection => {
       return connection.queryAsync({
@@ -65,7 +65,7 @@ module.exports = {
   },
   multipleQuery(sql, hasViewSql){
     if (hasViewSql) {
-      console.log(sql)
+      console.log(sql);
     }
     config.multipleStatements = true;
     var connection = mysql.createConnection(config);

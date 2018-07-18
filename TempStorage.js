@@ -1,4 +1,4 @@
-const _ = require('underscore');
+const _ = require('lodash');
 
 
 class TempStorage {
@@ -25,9 +25,7 @@ class TempStorage {
    * @param {string} updateKey Unique Key로써 update Rows를 찾아갈 수 있는 유일키
    */
   addStorage(submitObj, uniqueKey, updateKey) {
-    let findSubmitObj = _.find(this.mainStorage, storageObj => {
-      return storageObj[uniqueKey] === submitObj[uniqueKey];
-    });
+    let findSubmitObj = _.find(this.mainStorage, {[uniqueKey]: submitObj[uniqueKey]});
 
     if (_.isEmpty(findSubmitObj)) {
       this.mainStorage.push(submitObj);
@@ -46,12 +44,11 @@ class TempStorage {
    * @param {string} updateKey Unique Key로써 update Rows를 찾아갈 수 있는 유일키
    */
   processStorageForQuery(submitObj, findKey, updateKey) {
-    let findAlready = _.find(this.rowDataPacketList, storageObj => {
-      return storageObj[findKey] === submitObj[findKey];
-    });
+    let findAlready = _.find(this.rowDataPacketList, {[findKey]: submitObj[findKey]});
+ 
     // Insert
     if (_.isEmpty(findAlready)) {
-      this.insertStorage.push(submitObj)
+      this.insertStorage.push(submitObj);
     } else {
       submitObj[updateKey] = findAlready[updateKey];
       this.updateStorage.push(submitObj);
@@ -68,7 +65,7 @@ class TempStorage {
     return {
       insertObjList: this.insertStorage,
       updateObjList: this.updateStorage
-    }
+    };
   }
 
 }
