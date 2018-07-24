@@ -51,9 +51,13 @@ class BaseModel {
       let index = 0;
       for (const key in whereInfo) {
         if (whereInfo.hasOwnProperty(key)) {
-          const value = whereInfo[key];
+          let value = whereInfo[key];
           if(index++){
             sql += ' AND ';
+          }
+          if(typeof value === 'string'){
+            value = `'${value}'`;
+
           }
           sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
         }
