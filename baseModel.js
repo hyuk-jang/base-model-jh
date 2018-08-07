@@ -1,17 +1,18 @@
 /**
  * @typedef {Object} dbInfo
  * @property {string} host 접속 경로
+ * @property {number=} port 접속 포트
  * @property {string} user 접속 ID
  * @property {string} password 접속 PW
  * @property {string} database 접속 DB
  */
-
+const _ = require('lodash');
 const db = require('./db');
 const Promise = require('bluebird');
 
 class BaseModel {
   /**
-   * @param {dbInfo} dbInfo 
+   * @param {dbInfo} dbInfo
    */
   constructor(dbInfo) {
     this.db = db;
@@ -19,25 +20,18 @@ class BaseModel {
     try {
       db.createPool(dbInfo);
     } catch (error) {
-      throw error;      
+      throw error;
     }
   }
 
   /**
-   * 
+   *
    * @param {dbInfo} dbInfo mysql Create Pool을 위함
    */
   changePool(dbInfo) {
     db.createPool(dbInfo);
   }
 
-
-  /**
- * @typedef {Object} whereInfo
- * @property {number=} main_seq Main ID
- * @property {number=} data_logger_seq 데이터 로거 ID
- */
-  
   /**
    * SELECT 일반 테이블
    * @param {string} tblName Table 명
@@ -46,27 +40,27 @@ class BaseModel {
    */
   getTable(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
-    if(typeof whereInfo === 'object'){
+    if (typeof whereInfo === 'object') {
       sql += ' WHERE ';
       let index = 0;
       for (const key in whereInfo) {
         if (whereInfo.hasOwnProperty(key)) {
           let value = whereInfo[key];
-          if(index++){
+          if (index++) {
             sql += ' AND ';
           }
-          if(typeof value === 'string'){
+          if (typeof value === 'string') {
             value = `'${value}'`;
-
           }
-          sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+          sql += Array.isArray(value)
+            ? `${key} IN (${value})`
+            : `${key} = ${value}`;
         }
       }
     }
 
     return db.single(sql, null, hasViewSql);
   }
-
 
   /**
    * INSERT 일반 테이블
@@ -75,10 +69,12 @@ class BaseModel {
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   setTable(tblName, insertObj, hasViewSql) {
-    if(!Object.keys(insertObj).length){
+    if (!Object.keys(insertObj).length) {
       return new Error('object not defined');
     }
-    let sql = `INSERT INTO ${tblName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
+    let sql = `INSERT INTO ${tblName} (${Object.keys(
+      insertObj
+    )}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
 
     return db.single(sql, null, hasViewSql);
   }
@@ -89,68 +85,109 @@ class BaseModel {
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   setTables(tblName, insertList, hasViewSql) {
-    if(!insertList.length){
+    if (!insertList.length) {
       return new Error('object not defined');
     }
-    let sql = `INSERT INTO ${tblName} (${Object.keys(insertList[0])}) VALUES ${this.makeMultiInsertValues(insertList)}`;
+    let sql = `INSERT INTO ${tblName} (${Object.keys(
+      insertList[0]
+    )}) VALUES ${this.makeMultiInsertValues(insertList)}`;
     return db.single(sql, null, hasViewSql);
   }
 
   /**
-   * UPDATE 일반 테이블 
+   * UPDATE 일반 테이블
    * @param {string} tblName Table 명
-   * @param {{key: string,value: string|number}} whereObj Where 절
-   * @param {Object} updateObj Update 할려고하는 Data Object
+   * @param {Object} whereInfo Where 절
+   * @param {Object} updateInfo Update 할려고하는 Data Object
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  updateTable(tblName, whereObj, updateObj, hasViewSql) {
-    if(!Object.keys(whereObj).length || !Object.keys(updateObj).length){
+  updateTable(tblName, whereInfo, updateInfo, hasViewSql) {
+    if (!Object.keys(whereInfo).length || !Object.keys(updateInfo).length) {
       return new Error('object not defined');
     }
-    let sql = `UPDATE ${tblName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereObj.key} = ${whereObj.value}`;
+
+    let sql = `UPDATE ${tblName} SET ${this.makeUpdateValues(updateInfo)}`;
+    if (typeof whereInfo === 'object') {
+      sql += ' WHERE ';
+      let index = 0;
+      for (const key in whereInfo) {
+        if (whereInfo.hasOwnProperty(key)) {
+          let value = whereInfo[key];
+          if (index++) {
+            sql += ' AND ';
+          }
+          if (typeof value === 'string') {
+            value = `'${value}'`;
+          }
+          sql += Array.isArray(value)
+            ? `${key} IN (${value})`
+            : `${key} = ${value}`;
+        }
+      }
+    }
     return db.single(sql, null, hasViewSql);
   }
 
   /**
    * createPool 을 이용하여 Multiple Query 수행
-   * @param {string} tbName 
-   * @param {string} whereKey 
-   * @param {Object[]} updateList 
+   * @param {string} tbName
+   * @param {string[]} whereKeyList
+   * @param {Object[]} updateList
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  async updateTablesByPool(tblName, whereKey, updateList, hasViewSql){
-    if(!updateList.length && whereKey !== ''){
+  async updateTablesByPool(tblName, whereKeyList, updateList, hasViewSql) {
+    if (updateList.length === 0 || whereKeyList.length === 0) {
       return new Error('updateList or whereKey not defined');
     }
 
-    return await Promise.map(updateList, updateObj => {
-      return this.updateTable(tblName, {
-        key: whereKey,
-        value: updateObj[whereKey]
-      }, updateObj, hasViewSql);
+    return await Promise.map(updateList, updateInfo => {
+      return this.updateTable(
+        tblName,
+        _.pick(updateInfo, whereKeyList),
+        updateInfo,
+        hasViewSql
+      );
     });
   }
 
-
   /**
    * createConnection 을 이용하여 Multiple Query 수행
-   * @param {string} tbName 
-   * @param {string} whereKey 
-   * @param {Object[]} updateList 
+   * @param {string} tbName
+   * @param {string[]} whereKeyList
+   * @param {Object[]} updateList
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  updateTablesByConnection(tblName, whereKey, updateList, hasViewSql){
-    if(!updateList.length && whereKey !== ''){
+  updateTablesByConnection(tblName, whereKeyList, updateList, hasViewSql) {
+    if (updateList.length === 0 || whereKeyList.length === 0) {
       return new Error('updateList or whereKey not defined');
     }
     let sql = '';
-    updateList.forEach(updateObj => {
-      sql += `UPDATE ${tblName} SET ${this.makeUpdateValues(updateObj)} WHERE ${whereKey} = ${updateObj[whereKey]};`;
+    updateList.forEach(updateInfo => {
+      sql += `UPDATE ${tblName} SET ${this.makeUpdateValues(updateInfo)}`;
+      const whereInfo = _.pick(updateInfo, whereKeyList);
+      if (typeof whereInfo === 'object') {
+        sql += ' WHERE ';
+        let index = 0;
+        for (const key in whereInfo) {
+          if (whereInfo.hasOwnProperty(key)) {
+            let value = whereInfo[key];
+            if (index++) {
+              sql += ' AND ';
+            }
+            if (typeof value === 'string') {
+              value = `'${value}'`;
+            }
+            sql += Array.isArray(value)
+              ? `${key} IN (${value})`
+              : `${key} = ${value}`;
+          }
+        }
+        sql += ';';
+      }
     });
 
     return this.db.multipleQuery(sql, hasViewSql);
   }
-
 
   /**
    * Make Replace F
@@ -160,7 +197,6 @@ class BaseModel {
     var str_value = value.toString();
     return str_value.split('\'').join('\'\'');
   }
-
 
   /**
    * insert values 만들어줌
@@ -223,10 +259,13 @@ class BaseModel {
     return returnValue;
   }
 
-  makeVaildValue(checkValue){
+  makeVaildValue(checkValue) {
     let returnValue = null;
-    if(checkValue instanceof Date){
-      returnValue = checkValue.toISOString().substring(0,19).replace('T', ' ');
+    if (checkValue instanceof Date) {
+      returnValue = checkValue
+        .toISOString()
+        .substring(0, 19)
+        .replace('T', ' ');
     } else if (checkValue == null) {
       returnValue = null;
     } else if (checkValue === undefined) {
@@ -237,7 +276,7 @@ class BaseModel {
       returnValue = this.MRF(checkValue);
     }
 
-    return typeof returnValue === 'string' ? `"${returnValue}"` : returnValue;
+    return typeof returnValue === 'string' ? `'${returnValue}'` : returnValue;
   }
 }
 
