@@ -7,8 +7,8 @@
  * @property {string} database 접속 DB
  */
 const _ = require('lodash');
-const db = require('./db');
 const Promise = require('bluebird');
+const db = require('./db');
 
 class BaseModel {
   /**
@@ -43,20 +43,16 @@ class BaseModel {
     if (typeof whereInfo === 'object') {
       sql += ' WHERE ';
       let index = 0;
-      for (const key in whereInfo) {
-        if (whereInfo.hasOwnProperty(key)) {
-          let value = whereInfo[key];
-          if (index++) {
-            sql += ' AND ';
-          }
-          if (typeof value === 'string') {
-            value = `'${value}'`;
-          }
-          sql += Array.isArray(value)
-            ? `${key} IN (${value})`
-            : `${key} = ${value}`;
+      _.forEach(whereInfo, (value, key) => {
+        if (index) {
+          sql += ' AND ';
         }
-      }
+        if (typeof value === 'string') {
+          value = `'${value}'`;
+        }
+        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        index += 1;
+      });
     }
 
     return db.single(sql, null, hasViewSql);
@@ -72,12 +68,13 @@ class BaseModel {
     if (!Object.keys(insertObj).length) {
       return new Error('object not defined');
     }
-    let sql = `INSERT INTO ${tblName} (${Object.keys(
-      insertObj
-    )}) VALUES ${this.makeInsertValues(Object.values(insertObj))}`;
+    const sql = `INSERT INTO ${tblName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(
+      Object.values(insertObj),
+    )}`;
 
     return db.single(sql, null, hasViewSql);
   }
+
   /**
    * Multi INSERT 일반 테이블
    * @param {string} tblName Table 명
@@ -88,8 +85,8 @@ class BaseModel {
     if (!insertList.length) {
       return new Error('object not defined');
     }
-    let sql = `INSERT INTO ${tblName} (${Object.keys(
-      insertList[0]
+    const sql = `INSERT INTO ${tblName} (${Object.keys(
+      insertList[0],
     )}) VALUES ${this.makeMultiInsertValues(insertList)}`;
     return db.single(sql, null, hasViewSql);
   }
@@ -110,20 +107,17 @@ class BaseModel {
     if (typeof whereInfo === 'object') {
       sql += ' WHERE ';
       let index = 0;
-      for (const key in whereInfo) {
-        if (whereInfo.hasOwnProperty(key)) {
-          let value = whereInfo[key];
-          if (index++) {
-            sql += ' AND ';
-          }
-          if (typeof value === 'string') {
-            value = `'${value}'`;
-          }
-          sql += Array.isArray(value)
-            ? `${key} IN (${value})`
-            : `${key} = ${value}`;
+
+      _.forEach(whereInfo, (value, key) => {
+        if (index) {
+          sql += ' AND ';
         }
-      }
+        if (typeof value === 'string') {
+          value = `'${value}'`;
+        }
+        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        index += 1;
+      });
     }
     return db.single(sql, null, hasViewSql);
   }
@@ -140,14 +134,10 @@ class BaseModel {
       return new Error('updateList or whereKey not defined');
     }
 
-    return await Promise.map(updateList, updateInfo => {
-      return this.updateTable(
-        tblName,
-        _.pick(updateInfo, whereKeyList),
-        updateInfo,
-        hasViewSql
-      );
-    });
+    const result = await Promise.map(updateList, updateInfo =>
+      this.updateTable(tblName, _.pick(updateInfo, whereKeyList), updateInfo, hasViewSql),
+    );
+    return result;
   }
 
   /**
@@ -168,20 +158,16 @@ class BaseModel {
       if (typeof whereInfo === 'object') {
         sql += ' WHERE ';
         let index = 0;
-        for (const key in whereInfo) {
-          if (whereInfo.hasOwnProperty(key)) {
-            let value = whereInfo[key];
-            if (index++) {
-              sql += ' AND ';
-            }
-            if (typeof value === 'string') {
-              value = `'${value}'`;
-            }
-            sql += Array.isArray(value)
-              ? `${key} IN (${value})`
-              : `${key} = ${value}`;
+        _.forEach(whereInfo, (value, key) => {
+          if (index) {
+            sql += ' AND ';
           }
-        }
+          if (typeof value === 'string') {
+            value = `'${value}'`;
+          }
+          sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+          index += 1;
+        });
         sql += ';';
       }
     });
@@ -194,8 +180,8 @@ class BaseModel {
    * @param {string} value SQL
    */
   MRF(value) {
-    var str_value = value.toString();
-    return str_value.split('\'').join('\'\'');
+    const strValue = value.toString();
+    return strValue.split("'").join("''");
   }
 
   /**
@@ -241,21 +227,21 @@ class BaseModel {
 
   /**
    * update 구문 만들어줌
-   * @param {Object} objValue json
+   * @param {Object} valueInfo json
    */
-  makeUpdateValues(objValue) {
+  makeUpdateValues(valueInfo) {
     let returnValue = '';
-    if (typeof objValue !== 'object' && Array.isArray(objValue)) {
+    if (typeof valueInfo !== 'object' && Array.isArray(valueInfo)) {
       throw TypeError('object가 아님');
     }
 
-    for (let key in objValue) {
+    _.forEach(valueInfo, (value, key) => {
       if (returnValue !== '') {
         returnValue += ', ';
       }
+      returnValue += `${key} = ${this.makeVaildValue(value)}`;
+    });
 
-      returnValue += `${key} = ${this.makeVaildValue(objValue[key])}`;
-    }
     return returnValue;
   }
 

@@ -1,11 +1,11 @@
-
 const BM = require('./baseModel');
 const db = require('./db');
 const TempStorage = require('./TempStorage');
+
 module.exports = {
   BM,
   db,
-  TempStorage
+  TempStorage,
 };
 
 // const BM = require('./baseModel');
@@ -21,7 +21,3 @@ module.exports = {
 // .then(r => {
 //   console.log(r);
 // })
-
-
-
-

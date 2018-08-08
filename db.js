@@ -1,8 +1,7 @@
-'use strict';
-
 const mysql = require('mysql');
 const Promise = require('bluebird');
-const using = Promise.using;
+
+const {using} = Promise;
 let pool;
 
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);
@@ -13,32 +12,29 @@ let config = {
   host: '',
   user: '',
   password: '',
-  database: ''
+  database: '',
 };
 
 pool = mysql.createPool(config);
 
 function getConnection() {
-  return pool.getConnectionAsync().disposer(connection => {
-    return connection.release();
-  });
+  return pool.getConnectionAsync().disposer(connection => connection.release());
 }
 
 function getTransaction() {
-  return pool.getConnectionAsync().then(connection => {
-    return connection.beginTransactionAsync().then(() => {
-      return connection;
+  return pool
+    .getConnectionAsync()
+    .then(connection => connection.beginTransactionAsync().then(() => connection))
+    .disposer((connection, promise) => {
+      const result = promise.isFulfilled() ? connection.commitAsync() : connection.rollbackAsync();
+      return result.finally(() => {
+        connection.release();
+      });
     });
-  }).disposer((connection, promise) => {
-    let result = promise.isFulfilled() ? connection.commitAsync() : connection.rollbackAsync();
-    return result.finally(() => {
-      connection.release();
-    });
-  });
 }
 
 module.exports = {
-  createPool: (dbInfo) => {
+  createPool: dbInfo => {
     config = dbInfo;
     pool = mysql.createPool(dbInfo);
   },
@@ -47,31 +43,29 @@ module.exports = {
     if (hasViewSql) {
       console.log(sql);
     }
-    return using(getConnection(), connection => {
-      return connection.queryAsync({
-        sql: sql,
-        values: values
+    return using(getConnection(), connection =>
+      connection.queryAsync({
+        sql,
+        values,
         // nestTables: true,
         // typeCast: false,
         // timeout: 10000
-      });
-    });
+      }),
+    );
   },
   // 연달아 쿼리
   query(callback) {
-    return using(getConnection(), connection => {
-      return callback(connection);
-    });
+    return using(getConnection(), connection => callback(connection));
   },
-  multipleQuery(sql, hasViewSql){
+  multipleQuery(sql, hasViewSql) {
     if (hasViewSql) {
       console.log(sql);
     }
     config.multipleStatements = true;
-    var connection = mysql.createConnection(config);
+    const connection = mysql.createConnection(config);
     // Promise.promisify(mysql.con)
     return connection.queryAsync({
-      sql: sql,
+      sql,
       // values: values
       // nestTables: true,
       // typeCast: false,
@@ -80,8 +74,6 @@ module.exports = {
   },
   // 트랜잭션
   trans(callback) {
-    return using(getTransaction(), connection => {
-      return callback(connection);
-    });
-  }
+    return using(getTransaction(), connection => callback(connection));
+  },
 };

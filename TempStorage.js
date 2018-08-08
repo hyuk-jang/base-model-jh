@@ -1,6 +1,5 @@
 const _ = require('lodash');
 
-
 class TempStorage {
   constructor() {
     this.rowDataPacketList = [];
@@ -13,7 +12,7 @@ class TempStorage {
    * 기존 DB에 저장되어 있는 데이터 리스트 초기화
    * @param {Array} rowDataPacketList DB에서 긁어온 내용
    */
-  setExistStorage(rowDataPacketList){
+  setExistStorage(rowDataPacketList) {
     this.rowDataPacketList = rowDataPacketList;
   }
 
@@ -25,12 +24,12 @@ class TempStorage {
    * @param {string} updateKey Unique Key로써 update Rows를 찾아갈 수 있는 유일키
    */
   addStorage(submitObj, uniqueKey, updateKey) {
-    let findSubmitObj = _.find(this.mainStorage, {[uniqueKey]: submitObj[uniqueKey]});
+    const findSubmitObj = _.find(this.mainStorage, {[uniqueKey]: submitObj[uniqueKey]});
 
     if (_.isEmpty(findSubmitObj)) {
       this.mainStorage.push(submitObj);
     } else {
-      throw `중복 "${uniqueKey}"가 존재합니다`;
+      throw new Error(`중복 "${uniqueKey}"가 존재합니다`);
     }
 
     return this.processStorageForQuery(submitObj, uniqueKey, updateKey);
@@ -44,8 +43,8 @@ class TempStorage {
    * @param {string} updateKey Unique Key로써 update Rows를 찾아갈 수 있는 유일키
    */
   processStorageForQuery(submitObj, findKey, updateKey) {
-    let findAlready = _.find(this.rowDataPacketList, {[findKey]: submitObj[findKey]});
- 
+    const findAlready = _.find(this.rowDataPacketList, {[findKey]: submitObj[findKey]});
+
     // Insert
     if (_.isEmpty(findAlready)) {
       this.insertStorage.push(submitObj);
@@ -61,13 +60,12 @@ class TempStorage {
    * 최종 결과물을 반환
    * @returns {{insertObjList: Object[], updateObjList: Object[]}} {insertObjList,updateObjList}
    */
-  getFinalStorage(){
+  getFinalStorage() {
     return {
       insertObjList: this.insertStorage,
-      updateObjList: this.updateStorage
+      updateObjList: this.updateStorage,
     };
   }
-
 }
 
 module.exports = TempStorage;
