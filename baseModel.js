@@ -250,11 +250,11 @@ class BaseModel {
   makeVaildValue(checkValue) {
     let returnValue = null;
     if (checkValue instanceof Date) {
-      moment(checkValue).format('YYYY-MM-DD HH:mm:ss');
+      returnValue = moment(checkValue).format('YYYY-MM-DD HH:mm:ss');
     } else if (checkValue instanceof moment) {
       /** @type {moment.Moment} */
       const momentValue = checkValue;
-      momentValue.format('YYYY-MM-DD HH:mm:ss');
+      returnValue = momentValue.format('YYYY-MM-DD HH:mm:ss');
     } else if (checkValue == null) {
       returnValue = null;
     } else if (checkValue === undefined) {
