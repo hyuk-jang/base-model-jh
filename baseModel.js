@@ -6,7 +6,9 @@
  * @property {string} password 접속 PW
  * @property {string} database 접속 DB
  */
+
 const _ = require('lodash');
+const moment = require('moment');
 const Promise = require('bluebird');
 const db = require('./db');
 
@@ -248,10 +250,11 @@ class BaseModel {
   makeVaildValue(checkValue) {
     let returnValue = null;
     if (checkValue instanceof Date) {
-      returnValue = checkValue
-        .toISOString()
-        .substring(0, 19)
-        .replace('T', ' ');
+      moment(checkValue).format('YYYY-MM-DD HH:mm:ss');
+    } else if (checkValue instanceof moment) {
+      /** @type {moment.Moment} */
+      const momentValue = checkValue;
+      momentValue.format('YYYY-MM-DD HH:mm:ss');
     } else if (checkValue == null) {
       returnValue = null;
     } else if (checkValue === undefined) {
