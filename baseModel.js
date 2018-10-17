@@ -61,6 +61,36 @@ class BaseModel {
   }
 
   /**
+   * SELECT 일반 테이블 1 Row 만 가져옴
+   * @param {string} tblName Table 명
+   * @param {Object=} whereInfo where 조건 {key: value, key: value, ...}
+   * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
+   */
+  async getTableRow(tblName, whereInfo, hasViewSql) {
+    let sql = `SELECT * FROM ${tblName}`;
+    if (typeof whereInfo === 'object') {
+      sql += ' WHERE ';
+      let index = 0;
+      _.forEach(whereInfo, (value, key) => {
+        if (index) {
+          sql += ' AND ';
+        }
+        if (typeof value === 'string') {
+          value = `'${value}'`;
+        }
+        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        index += 1;
+      });
+    }
+
+    const packetRows = await db.single(sql, null, hasViewSql);
+    if (_.isEmpty(packetRows)) {
+      return {};
+    }
+    return _.head(packetRows);
+  }
+
+  /**
    * INSERT 일반 테이블
    * @param {string} tblName Table 명
    * @param {Object} insertObj Insert 할려고하는 Data Object
