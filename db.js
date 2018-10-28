@@ -1,7 +1,7 @@
 const mysql = require('mysql');
 const Promise = require('bluebird');
 
-const {using} = Promise;
+const { using } = Promise;
 let pool;
 
 Promise.promisifyAll(require('mysql/lib/Connection').prototype);

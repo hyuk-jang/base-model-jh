@@ -42,14 +42,14 @@ class BaseModel {
    */
   getTable(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
-    if (typeof whereInfo === 'object') {
+    if (_.isObject(whereInfo)) {
       sql += ' WHERE ';
       let index = 0;
       _.forEach(whereInfo, (value, key) => {
         if (index) {
           sql += ' AND ';
         }
-        if (typeof value === 'string') {
+        if (_.isString(value)) {
           value = `'${value}'`;
         }
         sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
@@ -68,14 +68,14 @@ class BaseModel {
    */
   async getTableRow(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
-    if (typeof whereInfo === 'object') {
+    if (_.isObject(whereInfo)) {
       sql += ' WHERE ';
       let index = 0;
       _.forEach(whereInfo, (value, key) => {
         if (index) {
           sql += ' AND ';
         }
-        if (typeof value === 'string') {
+        if (_.isString(value)) {
           value = `'${value}'`;
         }
         sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
@@ -136,7 +136,7 @@ class BaseModel {
     }
 
     let sql = `UPDATE ${tblName} SET ${this.makeUpdateValues(updateInfo)}`;
-    if (typeof whereInfo === 'object') {
+    if (_.isObject(whereInfo)) {
       sql += ' WHERE ';
       let index = 0;
 
@@ -144,7 +144,7 @@ class BaseModel {
         if (index) {
           sql += ' AND ';
         }
-        if (typeof value === 'string') {
+        if (_.isString(value)) {
           value = `'${value}'`;
         }
         sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
@@ -187,14 +187,14 @@ class BaseModel {
     updateList.forEach(updateInfo => {
       sql += `UPDATE ${tblName} SET ${this.makeUpdateValues(updateInfo)}`;
       const whereInfo = _.pick(updateInfo, whereKeyList);
-      if (typeof whereInfo === 'object') {
+      if (_.isObject(whereInfo)) {
         sql += ' WHERE ';
         let index = 0;
         _.forEach(whereInfo, (value, key) => {
           if (index) {
             sql += ' AND ';
           }
-          if (typeof value === 'string') {
+          if (_.isString(value)) {
             value = `'${value}'`;
           }
           sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
@@ -285,17 +285,17 @@ class BaseModel {
       /** @type {moment.Moment} */
       const momentValue = checkValue;
       returnValue = momentValue.format('YYYY-MM-DD HH:mm:ss');
-    } else if (checkValue == null) {
+    } else if (_.isNull(checkValue)) {
       returnValue = null;
-    } else if (checkValue === undefined) {
+    } else if (_.isUndefined(checkValue)) {
       returnValue = '';
-    } else if (typeof checkValue === 'number') {
+    } else if (_.isNumber(checkValue)) {
       returnValue = checkValue;
     } else {
       returnValue = this.MRF(checkValue);
     }
 
-    return typeof returnValue === 'string' ? `'${returnValue}'` : returnValue;
+    return _.isString(returnValue) ? `'${returnValue}'` : returnValue;
   }
 }
 
