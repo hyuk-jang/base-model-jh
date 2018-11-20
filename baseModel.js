@@ -42,7 +42,7 @@ class BaseModel {
    */
   getTable(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
-    if (_.isObject(whereInfo)) {
+    if (_.isObject(whereInfo) && !_.isEmpty(whereInfo)) {
       sql += ' WHERE ';
       let index = 0;
       _.forEach(whereInfo, (value, key) => {
@@ -68,7 +68,7 @@ class BaseModel {
    */
   async getTableRow(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
-    if (_.isObject(whereInfo)) {
+    if (_.isObject(whereInfo) && !_.isEmpty(whereInfo)) {
       sql += ' WHERE ';
       let index = 0;
       _.forEach(whereInfo, (value, key) => {
@@ -93,15 +93,15 @@ class BaseModel {
   /**
    * INSERT 일반 테이블
    * @param {string} tblName Table 명
-   * @param {Object} insertObj Insert 할려고하는 Data Object
+   * @param {Object} insertInfo Insert 할려고하는 Data Object
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
-  setTable(tblName, insertObj, hasViewSql) {
-    if (!Object.keys(insertObj).length) {
+  setTable(tblName, insertInfo, hasViewSql) {
+    if (_.isEmpty(insertInfo)) {
       return new Error('object not defined');
     }
-    const sql = `INSERT INTO ${tblName} (${Object.keys(insertObj)}) VALUES ${this.makeInsertValues(
-      Object.values(insertObj),
+    const sql = `INSERT INTO ${tblName} (${Object.keys(insertInfo)}) VALUES ${this.makeInsertValues(
+      Object.values(insertInfo),
     )}`;
 
     return db.single(sql, null, hasViewSql);
@@ -114,7 +114,7 @@ class BaseModel {
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   setTables(tblName, insertList, hasViewSql) {
-    if (!insertList.length) {
+    if (_.isEmpty(insertList)) {
       return new Error('object not defined');
     }
     const sql = `INSERT INTO ${tblName} (${Object.keys(
@@ -131,7 +131,7 @@ class BaseModel {
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   updateTable(tblName, whereInfo, updateInfo, hasViewSql) {
-    if (!Object.keys(whereInfo).length || !Object.keys(updateInfo).length) {
+    if (_.isEmpty(whereInfo) || _.isEmpty(updateInfo)) {
       return new Error('object not defined');
     }
 
@@ -162,7 +162,7 @@ class BaseModel {
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   async updateTablesByPool(tblName, whereKeyList, updateList, hasViewSql) {
-    if (updateList.length === 0 || whereKeyList.length === 0) {
+    if (_.isEmpty(updateList) || _.isEmpty(whereKeyList)) {
       return new Error('updateList or whereKey not defined');
     }
 
@@ -180,7 +180,7 @@ class BaseModel {
    * @param {boolean} hasViewSql 전송 Query Log 하고자 할 경우
    */
   updateTablesByConnection(tblName, whereKeyList, updateList, hasViewSql) {
-    if (updateList.length === 0 || whereKeyList.length === 0) {
+    if (_.isEmpty(updateList) || _.isEmpty(whereKeyList)) {
       return new Error('updateList or whereKey not defined');
     }
     let sql = '';
