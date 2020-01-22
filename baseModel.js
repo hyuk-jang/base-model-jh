@@ -152,7 +152,7 @@ class BaseModel {
         index += 1;
       });
     }
-    return db.single(sql, null, true);
+    return db.single(sql, null, false);
   }
 
   /**
