@@ -50,9 +50,9 @@ class BaseModel {
         if (index) {
           sql += ' AND ';
         }
-        if (_.isString(value)) {
-          value = `'${value}'`;
-        }
+        // if (_.isString(value)) {
+        //   value = `'${value}'`;
+        // }
         sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
         index += 1;
       });
@@ -76,9 +76,9 @@ class BaseModel {
         if (index) {
           sql += ' AND ';
         }
-        if (_.isString(value)) {
-          value = `'${value}'`;
-        }
+        // if (_.isString(value)) {
+        //   value = `'${value}'`;
+        // }
         sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${mysql.escape(value)}`;
         index += 1;
       });
@@ -145,14 +145,14 @@ class BaseModel {
         if (index) {
           sql += ' AND ';
         }
-        if (_.isString(value)) {
-          value = `'${value}'`;
-        }
+        // if (_.isString(value)) {
+        //   value = `'${value}'`;
+        // }
         sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
         index += 1;
       });
     }
-    return db.single(sql, null, hasViewSql);
+    return db.single(sql, null, true);
   }
 
   /**
@@ -195,9 +195,9 @@ class BaseModel {
           if (index) {
             sql += ' AND ';
           }
-          if (_.isString(value)) {
-            value = `'${value}'`;
-          }
+          // if (_.isString(value)) {
+          //   value = `'${value}'`;
+          // }
           sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
           index += 1;
         });
@@ -272,7 +272,7 @@ class BaseModel {
       if (returnValue !== '') {
         returnValue += ', ';
       }
-      returnValue += `${key} = ${this.makeVaildValue(mysql.escape(value))}`;
+      returnValue += `${key} = ${this.makeVaildValue(value)}`;
     });
 
     return returnValue;
@@ -296,7 +296,7 @@ class BaseModel {
       returnValue = this.MRF(checkValue);
     }
 
-    return _.isString(returnValue) ? `'${returnValue}'` : returnValue;
+    return _.isString(returnValue) ? `${mysql.escape(returnValue)}` : returnValue;
   }
 }
 
