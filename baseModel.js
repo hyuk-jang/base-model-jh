@@ -9,6 +9,7 @@
 
 const _ = require('lodash');
 const moment = require('moment');
+const mysql = require('mysql');
 const Promise = require('bluebird');
 const db = require('./db');
 
@@ -52,7 +53,7 @@ class BaseModel {
         if (_.isString(value)) {
           value = `'${value}'`;
         }
-        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
         index += 1;
       });
     }
@@ -78,7 +79,7 @@ class BaseModel {
         if (_.isString(value)) {
           value = `'${value}'`;
         }
-        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${mysql.escape(value)}`;
         index += 1;
       });
     }
@@ -147,7 +148,7 @@ class BaseModel {
         if (_.isString(value)) {
           value = `'${value}'`;
         }
-        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+        sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
         index += 1;
       });
     }
@@ -197,7 +198,7 @@ class BaseModel {
           if (_.isString(value)) {
             value = `'${value}'`;
           }
-          sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${value}`;
+          sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
           index += 1;
         });
         sql += ';';
@@ -271,7 +272,7 @@ class BaseModel {
       if (returnValue !== '') {
         returnValue += ', ';
       }
-      returnValue += `${key} = ${this.makeVaildValue(value)}`;
+      returnValue += `${key} = ${this.makeVaildValue(mysql.escape(value))}`;
     });
 
     return returnValue;
