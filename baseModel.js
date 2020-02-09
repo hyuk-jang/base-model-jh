@@ -44,18 +44,15 @@ class BaseModel {
   getTable(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
     if (_.isObject(whereInfo) && !_.isEmpty(whereInfo)) {
-      sql += ' WHERE ';
-      let index = 0;
-      _.forEach(whereInfo, (value, key) => {
-        if (index) {
-          sql += ' AND ';
+      sql += ` WHERE ${_.map(whereInfo, (value, key) => {
+        if (value === null) {
+          return `${key} IS NULL`;
         }
-        // if (_.isString(value)) {
-        //   value = `'${value}'`;
-        // }
-        sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
-        index += 1;
-      });
+        if (Array.isArray(value)) {
+          return `${key} IN (${mysql.escape(value)})`;
+        }
+        return `${key} = ${mysql.escape(value)}`;
+      }).join(' AND ')}`;
     }
 
     return db.single(sql, null, hasViewSql);
@@ -70,18 +67,15 @@ class BaseModel {
   async getTableRow(tblName, whereInfo, hasViewSql) {
     let sql = `SELECT * FROM ${tblName}`;
     if (_.isObject(whereInfo) && !_.isEmpty(whereInfo)) {
-      sql += ' WHERE ';
-      let index = 0;
-      _.forEach(whereInfo, (value, key) => {
-        if (index) {
-          sql += ' AND ';
+      sql += ` WHERE ${_.map(whereInfo, (value, key) => {
+        if (value === null) {
+          return `${key} IS NULL`;
         }
-        // if (_.isString(value)) {
-        //   value = `'${value}'`;
-        // }
-        sql += Array.isArray(value) ? `${key} IN (${value})` : `${key} = ${mysql.escape(value)}`;
-        index += 1;
-      });
+        if (Array.isArray(value)) {
+          return `${key} IN (${mysql.escape(value)})`;
+        }
+        return `${key} = ${mysql.escape(value)}`;
+      }).join(' AND ')}`;
     }
 
     const packetRows = await db.single(sql, null, hasViewSql);
@@ -138,19 +132,12 @@ class BaseModel {
 
     let sql = `UPDATE ${tblName} SET ${this.makeUpdateValues(updateInfo)}`;
     if (_.isObject(whereInfo)) {
-      sql += ' WHERE ';
-      let index = 0;
-
-      _.forEach(whereInfo, (value, key) => {
-        if (index) {
-          sql += ' AND ';
+      sql += ` WHERE ${_.map(whereInfo, (value, key) => {
+        if (Array.isArray(value)) {
+          return `${key} IN (${mysql.escape(value)})`;
         }
-        // if (_.isString(value)) {
-        //   value = `'${value}'`;
-        // }
-        sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
-        index += 1;
-      });
+        return `${key} = ${mysql.escape(value)}`;
+      }).join(' AND ')}`;
     }
     return db.single(sql, null, false);
   }
@@ -189,19 +176,12 @@ class BaseModel {
       sql += `UPDATE ${tblName} SET ${this.makeUpdateValues(updateInfo)}`;
       const whereInfo = _.pick(updateInfo, whereKeyList);
       if (_.isObject(whereInfo)) {
-        sql += ' WHERE ';
-        let index = 0;
-        _.forEach(whereInfo, (value, key) => {
-          if (index) {
-            sql += ' AND ';
+        sql += ` WHERE ${_.map(whereInfo, (value, key) => {
+          if (Array.isArray(value)) {
+            return `${key} IN (${mysql.escape(value)})`;
           }
-          // if (_.isString(value)) {
-          //   value = `'${value}'`;
-          // }
-          sql += Array.isArray(value) ? `${key} IN (${mysql.escape(value)})` : `${key} = ${mysql.escape(value)}`;
-          index += 1;
-        });
-        sql += ';';
+          return `${key} = ${mysql.escape(value)}`;
+        }).join(' AND ')};`;
       }
     });
 
